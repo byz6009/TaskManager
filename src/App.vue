@@ -4,7 +4,7 @@ import TaskForm from './components/TaskForm.vue'
 import TaskCard from './components/TaskCard.vue'
 import { useTasks } from './composables/useTasks.js'
 
-const { tasks, createTask, updateTask, deleteTask } = useTasks()
+const { tasks, storageError, createTask, updateTask, deleteTask } = useTasks(() => window.localStorage)
 const editingId = ref(null)
 const editingTask = computed(() => tasks.value.find(task => task.id === editingId.value) ?? null)
 const formVersion = ref(0)
@@ -65,8 +65,9 @@ function cancelEdit() {
         <p class="text-sm font-semibold tracking-widest text-teal-700">任务管理</p>
         <h1 class="mt-2 text-4xl font-bold tracking-tight">TaskManager</h1>
         <p class="mt-3 text-slate-600">把要做的事整理清楚，让每一步都有方向。</p>
-        <p class="mt-3 text-sm text-slate-500">当前任务仅在本次页面中保留，刷新后会清空。</p>
+        <p class="mt-3 text-sm text-slate-500">任务自动保存在当前浏览器，刷新后可继续查看。</p>
       </header>
+      <p v-if="storageError" role="alert" class="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{{ storageError }}</p>
       <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
         <TaskForm :key="formVersion" :task="editingTask" :error="error" @save="saveTask" @cancel="cancelEdit" />
         <section class="min-w-0" aria-labelledby="list-heading">

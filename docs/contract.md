@@ -1,6 +1,6 @@
 # TaskManager 数据与接口契约
 
-第 0 轮计划已确认。完整采用本机《软件工程作业-Agent完整教程.md》第 19 节建议契约，无简化差异。第 2 轮实现 validateTaskInput 与 useTasks 内存集合；moveTask 和存储函数留待后续轮次。项目名称为 TaskManager，名称调整不改变字段、枚举、Result 或存储键。
+第 0 轮计划已确认。完整采用本机《软件工程作业-Agent完整教程.md》第 19 节建议契约，无简化差异。第 2 轮实现 validateTaskInput 与 useTasks；第 3 轮实现 parseTaskData、encodeTaskData 和任务持久化，moveTask 留待第 4 轮。项目名称为 TaskManager，名称调整不改变字段、枚举、Result 或存储键。
 
 ## Task 数据
 
@@ -57,6 +57,10 @@ useTasks 管理唯一的响应式任务集合，列表与看板由它派生。
 - 不调用 localStorage.clear()；不在刷新时重新插入示例任务。
 - 主题优先恢复已有选择，首次可默认浅色；采用根元素 dark 类控制主题。
 - 浏览器验收统一使用 http://localhost:5173，避免更换来源影响存储观察。
+
+第 3 轮接入细节：App 调用 useTasks(() => window.localStorage)，将存储访问延迟到异常捕获范围内。useTasks 可不传参数保留原有内存测试，也可注入 getItem/setItem 模拟对象开展 Node 集成测试；额外暴露只读 storageError 供页面提示。这不改变四个纯函数的契约。
+
+恢复成功后注册无 immediate 的同步 watch；所有成功的 CRUD 以替换数组方式进入同一保存路径，因此状态、优先级和空数组均保存。启动不写入。恢复失败不注册保存监听，当前会话保持暂停，修复存储或权限后刷新重新读取。写入或编码失败保留内存修改并提示，下次有效修改重试，成功后清除提示。不会自动清空或重置损坏的存储。
 
 ## 关键不变量
 

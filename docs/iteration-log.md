@@ -138,3 +138,66 @@
 9. 再创建一项后刷新：本轮应清空。检查浏览器 Console 无应用错误。
 
 下一步：等待用户反馈。通过后标记“用户人工验收”，按用户确认提交 feat: add task CRUD；出现问题则先复现和最小修复，不提前进入持久化轮次。
+
+## 第 3 轮：localStorage 任务持久化（2026-09-22）
+
+### 基线、计划与范围
+
+- 读取 AGENTS.md、当前源文件、契约和测试后再开发。起始工作区干净，已有第 2 轮提交 020c846（feat: 实现任务增删改查及输入校验），上一条为 f9a3e17；这些提交均非本轮创建。不据提交存在推断人工浏览器验收结果。
+- 按原契约实现纯解析/序列化，使用 course-task-board.tasks.v1。启动先恢复，成功后才监听保存；加载失败保留原值并暂停写入。保留第 2 轮所有 CRUD 行为，不新增依赖、后端、拖拽或主题。
+
+### 实际修改文件与 diff 摘要
+
+新增 2 个文件：
+
+- src/storage/taskStorage.js：固定存储键，parseTaskData 纯解析与字段/枚举/id 唯一性校验，encodeTaskData 直接返回 JSON 字符串；无 window 依赖。
+- tests/taskStorage.test.js：15 个存储相关用例，包含纯函数和注入模拟存储的接入测试。
+
+修改 5 个文件：
+
+- src/composables/useTasks.js：可注入存储访问函数，先读取再监听；所有成功修改统一同步保存；读取、解析、编码和写入错误处理；只读错误提示状态。
+- src/App.vue：传入浏览器 localStorage 访问函数，显示持久化说明和存储错误提示。
+- docs/contract.md：记录第 3 轮实现进度与接入细节，纯函数契约和存储键不变。
+- docs/task-brief.md：更新目录和轮次进度。
+- docs/iteration-log.md：补充本轮实际证据。
+
+### 实际命令与结果
+
+所有涉及 Node/npm 的命令块先执行：
+
+```powershell
+. 'C:\Users\Administrator\Documents\Codex\2026-09-22\agent-x20\outputs\environment\Enter-CourseEnv.ps1'
+```
+
+1. Get-Content 读取项目规则、useTasks、taskRules、App、contract、useTasks 测试与日志；rg --files -g AGENTS.md -g '!node_modules' -g '!dist' 只发现根目录 AGENTS.md。
+2. 使用单命令 git -c safe.directory=C:/Users/Administrator/Documents/Codex/course-task-board 前缀执行 status --short --untracked-files=all、log -2 --oneline：状态为空，提交结果见基线；未修改全局配置。
+3. 使用 apply_patch 创建和修改上述文件。
+4. node --test tests/taskStorage.test.js：15 项通过，0 失败、0 取消、0 跳过，退出码 0。
+5. npm.cmd test：28 项通过（原 13 项全部保留），0 失败、0 取消、0 跳过，退出码 0。
+6. npm.cmd run build：成功，退出码 0；Vite 8.3.0 转换 16 个模块，108ms；HTML 0.41 kB、CSS 14.50 kB、JS 74.71 kB。
+7. rg -n '第 2 轮|第 3 轮|规划|内存|刷新' docs/task-brief.md docs/contract.md：定位需要更新的进度说明。git -c safe.directory=... -c core.autocrlf=false diff -- src/composables/useTasks.js src/App.vue：审查恢复顺序、写入路径与页面接线。
+8. Invoke-WebRequest -Uri 'http://localhost:5173' -UseBasicParsing -TimeoutSec 10：HTTP 200，复用现有开发服务，没有启动新服务或改端口。这不证明浏览器交互或持久化已验收。
+9. git diff --check（单命令 core.autocrlf=false）及针对未跟踪文件的逐个 git diff --no-index --check -- /dev/null <文件>：5 个修改文件和 2 个新增文件无空白错误，命令块退出码 0。git status --short --untracked-files=all、git diff --stat 确认本轮范围；git diff --cached --stat 为空，未暂存。
+
+### 已验证与尚未验证
+
+- Node 测试覆盖 null、合法空数组、正常往返、中文/换行、损坏 JSON、非法结构/字段/枚举、重复 id、编码异常；缺失描述仍按既有契约转为空串。
+- 注入存储测试确认：初始化仅读取不写入；CRUD、单独状态与优先级修改会保存；删除最后一项保存 []；重新初始化能恢复保存结果；损坏数据后的临时 CRUD 不覆盖原值；其他存储键不变；访问存储对象/getItem/setItem 抛错会捕获；写失败保留内存修改，下次成功修改清除错误；被校验拒绝的操作不写入。
+- Node 模拟异常验证的是接入逻辑和错误状态，并非真实浏览器白屏、权限、容量或提示显示的验收。
+- 尚未验证：真实浏览器分别增改删后刷新、取消编辑回归、存储错误提示显示、控制台；等待用户人工操作。
+- lint/typecheck 未配置。加载失败后暂停当前会话自动写入；修复存储或权限后刷新重新加载。写失败期间刷新可能丢失尚未保存的内存修改，页面会提示。
+- 本轮未安装依赖，未暂存、未提交、未推送。
+
+### 浏览器验收步骤
+
+请始终在同一浏览器使用 http://localhost:5173：
+
+1. 新建“持久化任务 A”，描述留空，优先级高；再新建“持久化任务 B”。按 F5，预期两项仍在且字段正确。
+2. 修改 A 的标题、描述，保存后 F5，预期新内容保留，任务数量不变。再分别修改状态为进行中、优先级为低，每次保存后刷新，确认对应中文状态和绿色“低”保留。
+3. 编辑 A，改动内容后取消，再 F5，预期仍为上次已保存内容；纯空格标题保存被拒绝，刷新后原任务不变。
+4. 删除 A 后 F5，预期 A 不再出现，B 保持不变。
+5. 删除最后的 B 后 F5，再刷新一次，预期仍为空列表，无示例任务复活。若原来还有其他测试任务，逐项删除后再验证最后一项。
+6. 在开发者工具 Application → Local Storage 中查看 course-task-board.tasks.v1：应为任务 JSON 数组，全部删除后值为 []。检查 Console 无应用错误。
+7. 可选异常验收：只对测试数据进行，先备份该键的原始值，再将其临时改为无效 JSON 并刷新。预期显示错误提示；临时新建任务后，原无效值仍保持不变。随后恢复备份的准确值（原先无键则仅移除这个测试键）并刷新，恢复正常。不要清空整个 localStorage。
+
+下一步：等待用户反馈，记录实际人工验收；有问题先修复，确认通过后再提交 feat: persist tasks in localStorage。
