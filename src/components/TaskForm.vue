@@ -9,7 +9,8 @@ const props = defineProps({
 const emit = defineEmits(['save', 'cancel'])
 const draft = reactive({})
 
-watch(() => props.task, (task) => {
+watch(() => props.task?.id, () => {
+  const task = props.task
   // 只复制字段，输入框始终编辑草稿，取消时原任务不受影响。
   Object.assign(draft, {
     title: task?.title ?? '',
@@ -18,6 +19,11 @@ watch(() => props.task, (task) => {
     priority: task?.priority ?? 'medium',
   })
 }, { immediate: true })
+
+// 拖拽正在编辑的任务时同步状态，但保留其他尚未保存的草稿字段。
+watch(() => props.task?.status, (status) => {
+  if (status) draft.status = status
+})
 </script>
 
 <template>

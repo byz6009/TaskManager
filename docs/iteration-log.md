@@ -201,3 +201,67 @@
 7. 可选异常验收：只对测试数据进行，先备份该键的原始值，再将其临时改为无效 JSON 并刷新。预期显示错误提示；临时新建任务后，原无效值仍保持不变。随后恢复备份的准确值（原先无键则仅移除这个测试键）并刷新，恢复正常。不要清空整个 localStorage。
 
 下一步：等待用户反馈，记录实际人工验收；有问题先修复，确认通过后再提交 feat: persist tasks in localStorage。
+
+## 第 4 轮：三列看板与原生拖拽（2026-09-22）
+
+### 基线与范围
+
+- 先读取 AGENTS.md、源码、契约及测试。起始工作区干净，已有提交 fca9b19（feat: 使用 localStorage 保存和恢复任务数据），前一条为 020c846。这些提交不是本轮创建，不据此补记未经反馈的浏览器验收结果。
+- 用三列看板替换原列表，仍只有 useTasks 一份任务集合。原生 HTML Drag and Drop，不安装依赖，不改字段、枚举、Result 或存储键，不提前添加主题。
+- 同列放下不更新数组也不写存储；正常移动只改目标 status，既有存储错误保护继续生效。
+
+### 实际修改文件与 diff 摘要
+
+新增 1 个文件：src/components/TaskBoard.vue。展示待办/进行中/完成、列计数和空列区域，处理拖拽 id、放置提示与清理，按契约发出 move/edit/delete。
+
+修改 10 个文件：
+
+- src/domain/taskRules.js：增加 moveTask，先检查状态再找 id；同列返回原数组，跨列仅替换目标任务对象。
+- src/composables/useTasks.js：增加 changeTaskStatus 接入纯函数和现有保存路径。
+- src/App.vue：以 TaskBoard 替换列表，接收 move 并处理结果，保留表单与总计数，调整看板布局宽度。
+- src/components/TaskCard.vue：编辑/删除按钮保留点击事件并阻止自身拖动。
+- src/components/TaskForm.vue：按任务 id 切换草稿；正在编辑的任务被拖动时只同步状态，不覆盖其他草稿字段。
+- tests/taskRules.test.js：新增 5 项状态转换规则测试。
+- tests/taskStorage.test.js：新增 3 项移动接入测试，已有损坏存储保护测试增加移动操作。
+- docs/contract.md、docs/task-brief.md、docs/iteration-log.md：实现进度、接入说明和实际证据。
+
+### 实际命令与结果
+
+每个 Node/npm 命令块先点加载：
+
+```powershell
+. 'C:\Users\Administrator\Documents\Codex\2026-09-22\agent-x20\outputs\environment\Enter-CourseEnv.ps1'
+```
+
+1. Get-Content 读取 AGENTS.md、taskRules、useTasks、TaskCard、App、taskRules/taskStorage 测试、contract 与 iteration-log；rg --files -g AGENTS.md -g '!node_modules' -g '!dist' 只发现根目录规则。
+2. git -c safe.directory=C:/Users/Administrator/Documents/Codex/course-task-board status --short --untracked-files=all：无输出。相同前缀 log -2 --oneline 返回上述基线。未修改全局 Git 配置。
+3. apply_patch 完成上述实现与测试。
+4. node --test tests/taskRules.test.js tests/taskStorage.test.js：31 项通过，0 失败、0 取消、0 跳过，退出码 0。
+5. npm.cmd test：36 项通过，0 失败、0 取消、0 跳过，退出码 0；原有校验、CRUD 和存储用例均保留。
+6. npm.cmd run build：成功，退出码 0；Vite 8.3.0 转换 17 个模块，112ms；HTML 0.41 kB、CSS 16.96 kB、JS 78.39 kB。
+7. rg -n '第 3 轮|第 4 轮|目录规划|拖拽|moveTask' docs/task-brief.md docs/contract.md：定位进度说明。git diff（单命令 safe.directory 与 core.autocrlf=false）审查 App、TaskForm、TaskCard、taskRules、useTasks 改动，核对真实 drop → 事件 → changeTaskStatus → moveTask → 已有保存的接线。
+8. Invoke-WebRequest -Uri 'http://localhost:5173' -UseBasicParsing -TimeoutSec 10：HTTP 200，复用现有服务，未更改端口。未执行浏览器鼠标操作或截图。
+9. git diff --check 及新增文件的 git diff --no-index --check -- /dev/null <文件>（单命令 safe.directory 与 core.autocrlf=false）：无空白诊断，命令块退出码 0。status --short --untracked-files=all 与 diff --stat 确认 10 个修改文件、1 个新增文件；diff --cached --stat 无输出，未暂存。
+
+### 验证范围与限制
+
+- 纯函数验证：跨列后数量/id 集合不变、仅目标 status 改变、其他任务和输入不变；连续移动不丢不重；同列返回原数组；无效 id/状态不修改输入；错误优先顺序符合契约。
+- 存储接入验证：多次移动被保存，重新初始化恢复新状态，移动后仍能编辑/删除；同列和非法操作不写存储；写入失败沿用错误提示；加载损坏数据后移动仍不会覆盖原值。
+- 未验证：真实桌面鼠标拖拽、空列命中、放置高亮与取消清理、拖拽时编辑草稿保留、真实浏览器刷新、按钮点击及控制台。Node 测试不等于上述浏览器验收。
+- 窄窗口保留三列并允许看板区域横向滚动；手机触摸拖拽不在本轮验收范围，表单状态选择器仍可用。lint/typecheck 未配置。
+- 本轮未安装依赖，未暂存、未提交、未推送。
+
+### 浏览器验收步骤
+
+在桌面 Edge 使用 http://localhost:5173，沿用现有数据，不清空 localStorage：
+
+1. 检查待办、进行中、完成三列和各列数量，合计与总任务数一致。新建两项待办任务，确保至少一个目标列为空（可用表单移动现有任务）。
+2. 从卡片标题或内容区域拖动：待办 → 进行中 → 完成。目标列应高亮并显示放置提示；松开后卡片仅出现一次，状态和计数更新，总数不变。
+3. 拖到没有卡片的空列，确认也能放置。连续来回移动同一任务，确认不丢失、不复制，其他任务内容不变。
+4. 原列放下，内容与计数不变；拖出看板松开或按 Esc 取消，状态不变且卡片透明效果/列高亮消失。
+5. 跨列移动后 F5，确认卡片留在新列，字段与总数正确。
+6. 拖动后点编辑，修改标题/描述/优先级并保存；用表单状态选择器改列，确认仍有效。取消编辑不改变任务内容。删除一个任务，只减少该任务。
+7. 打开某任务编辑，先改标题和描述但不保存，再拖动该任务：表单保留这些草稿，状态同步新列。取消编辑时草稿丢弃，但已完成的拖拽状态保留。
+8. 检查高/中/低颜色标签和 Console；拖拽结束后无残留高亮，页面无应用错误。
+
+下一步：等待用户反馈；有问题先复现和最小修复，用户确认后再记录人工验收并提交 feat: add draggable kanban board。

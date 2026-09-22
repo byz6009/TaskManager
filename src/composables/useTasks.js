@@ -1,5 +1,5 @@
 import { readonly, ref, watch } from 'vue'
-import { validateTaskInput } from '../domain/taskRules.js'
+import { moveTask, validateTaskInput } from '../domain/taskRules.js'
 import { encodeTaskData, parseTaskData, TASK_STORAGE_KEY } from '../storage/taskStorage.js'
 
 // 注入访问函数，连读取 localStorage 属性本身失败也能捕获；无参数时用于内存测试。
@@ -63,5 +63,11 @@ export function useTasks(getStorage = null) {
     return { ok: true, value: id }
   }
 
-  return { tasks: readonly(tasks), storageError: readonly(storageError), createTask, updateTask, deleteTask }
+  function changeTaskStatus(id, status) {
+    const result = moveTask(tasks.value, id, status)
+    if (result.ok && result.value !== tasks.value) tasks.value = result.value
+    return result
+  }
+
+  return { tasks: readonly(tasks), storageError: readonly(storageError), createTask, updateTask, deleteTask, changeTaskStatus }
 }

@@ -35,3 +35,17 @@ export function validateTaskInput(input) {
     },
   }
 }
+
+export function moveTask(tasks, id, nextStatus) {
+  if (!STATUS_OPTIONS.some(({ value }) => value === nextStatus)) {
+    return { ok: false, errorCode: 'INVALID_STATUS' }
+  }
+  const target = tasks.find(task => task.id === id)
+  if (!target) return { ok: false, errorCode: 'TASK_NOT_FOUND' }
+  if (target.status === nextStatus) return { ok: true, value: tasks }
+
+  return {
+    ok: true,
+    value: tasks.map(task => task.id === id ? { ...task, status: nextStatus } : task),
+  }
+}

@@ -136,6 +136,7 @@ test('损坏数据加载后可临时 CRUD，但始终不覆盖原值或其他键
     assert.deepEqual(store.tasks.value, [])
     assert.match(store.storageError.value, /暂停自动保存/)
     const created = store.createTask(task)
+    store.changeTaskStatus(created.value.id, 'doing')
     store.updateTask(created.value.id, { ...task, status: 'done' })
     store.deleteTask(created.value.id)
     assert.equal(storage.values.get(TASK_STORAGE_KEY), raw)
@@ -187,4 +188,45 @@ test('被拒绝的新建编辑与无效删除不触发存储写入', (t) => {
   assert.equal(store.deleteTask('missing').ok, false)
   assert.equal(storage.values.get(TASK_STORAGE_KEY), raw)
   assert.deepEqual(storage.calls, [['get', TASK_STORAGE_KEY]])
+})
+
+test('看板状态转换通过现有路径保存，恢复后仍可编辑和删除', (t) => {
+  const other = { ...task, id: 'task-b', title: '另一个任务', status: 'done' }
+  const storage = memoryStorage(encodeTaskData([task, other]))
+  const store = openStore(t, () => storage)
+  for (const status of ['doing', 'done', 'todo', 'doing']) {
+    const result = store.changeTaskStatus(task.id, status)
+    assert.equal(result.ok, true)
+    assert.deepEqual(JSON.parse(storage.values.get(TASK_STORAGE_KEY)), [{ ...task, status }, other])
+  }
+  assert.equal(storage.calls.filter(([action]) => action === 'set').length, 4)
+  const restored = openStore(t, () => storage)
+  assert.deepEqual(JSON.parse(JSON.stringify(restored.tasks.value)), [{ ...task, status: 'doing' }, other])
+  assert.equal(restored.updateTask(task.id, { ...task, title: '拖动后编辑', status: 'doing' }).ok, true)
+  assert.equal(JSON.parse(storage.values.get(TASK_STORAGE_KEY))[0].title, '拖动后编辑')
+  assert.equal(restored.deleteTask(task.id).ok, true)
+  assert.deepEqual(JSON.parse(storage.values.get(TASK_STORAGE_KEY)), [other])
+})
+
+test('同列放下、无效 id 和无效状态不会修改集合或写存储', (t) => {
+  const raw = encodeTaskData([task])
+  const storage = memoryStorage(raw)
+  const store = openStore(t, () => storage)
+  assert.equal(store.changeTaskStatus(task.id, 'todo').ok, true)
+  assert.deepEqual(store.changeTaskStatus('missing', 'done'), { ok: false, errorCode: 'TASK_NOT_FOUND' })
+  assert.deepEqual(store.changeTaskStatus(task.id, 'bad'), { ok: false, errorCode: 'INVALID_STATUS' })
+  assert.deepEqual(JSON.parse(JSON.stringify(store.tasks.value)), [task])
+  assert.deepEqual(storage.calls, [['get', TASK_STORAGE_KEY]])
+  assert.equal(storage.values.get(TASK_STORAGE_KEY), raw)
+})
+
+test('拖动状态写入失败沿用错误提示，旧存储不被破坏', (t) => {
+  const raw = encodeTaskData([task])
+  const storage = memoryStorage(raw)
+  storage.setItem = () => { throw new Error('QuotaExceededError') }
+  const store = openStore(t, () => storage)
+  assert.equal(store.changeTaskStatus(task.id, 'done').ok, true)
+  assert.equal(store.tasks.value[0].status, 'done')
+  assert.equal(storage.values.get(TASK_STORAGE_KEY), raw)
+  assert.match(store.storageError.value, /无法保存/)
 })

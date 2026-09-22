@@ -35,7 +35,7 @@
 ## 目录规划
 
 当前工程入口：index.html、vite.config.js、src/main.js、src/App.vue、src/style.css。
-按功能轮次添加以下文件，不为规划创建空模块或空测试。第 2 轮已添加 TaskForm、TaskCard、useTasks、taskRules 以及两个实际测试文件；第 3 轮添加 taskStorage.js 与 taskStorage.test.js；其余仍为规划：
+按功能轮次添加以下文件，不为规划创建空模块或空测试。第 2 轮已添加 TaskForm、TaskCard、useTasks、taskRules 以及两个实际测试文件；第 3 轮添加 taskStorage.js 与 taskStorage.test.js；第 4 轮添加 TaskBoard，替换原列表展示；其余仍为规划：
 
 ```text
 src/
@@ -66,5 +66,5 @@ README.md
 
 每轮先说明计划，再实现、运行相关测试和构建，返回文件、命令结果、diff 摘要、浏览器步骤、未验证项和下一步，然后停止。
 用户反馈浏览器结果后，修复问题或记录人工验收；用户确认后才提交并报告真实哈希，进入下一轮前遵循用户指示。
-第 1 轮只建立骨架；第 2 轮实现内存任务列表与 CRUD；第 3 轮添加 localStorage 持久化和错误保护，保留既有 CRUD，不提前实现拖拽或主题。
+第 1 轮只建立骨架；第 2 轮实现内存任务列表与 CRUD；第 3 轮添加 localStorage 持久化和错误保护；第 4 轮添加三列看板与桌面原生拖拽，保留表单操作和既有保存路径，不提前实现主题。
 相同问题连续两次没有新证据时，整理失败日志及需要的信息，停止盲目重试。

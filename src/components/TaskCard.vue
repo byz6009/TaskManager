@@ -20,8 +20,8 @@ const priorityClasses = {
       <span class="rounded-full px-3 py-1.5" :class="priorityClasses[task.priority]">优先级：{{ PRIORITY_OPTIONS.find(option => option.value === task.priority)?.label }}</span>
     </div>
     <div class="mt-4 flex gap-3 border-t border-slate-100 pt-3">
-      <button type="button" class="rounded-md px-2 py-1 text-sm font-medium text-teal-800 hover:bg-teal-50" :aria-label="`编辑任务：${task.title}`" @click="$emit('edit', task.id)">编辑</button>
-      <button type="button" class="rounded-md px-2 py-1 text-sm font-medium text-red-700 hover:bg-red-50" :aria-label="`删除任务：${task.title}`" @click="$emit('delete', task.id)">删除</button>
+      <button type="button" draggable="false" class="rounded-md px-2 py-1 text-sm font-medium text-teal-800 hover:bg-teal-50" :aria-label="`编辑任务：${task.title}`" @dragstart.prevent.stop @click="$emit('edit', task.id)">编辑</button>
+      <button type="button" draggable="false" class="rounded-md px-2 py-1 text-sm font-medium text-red-700 hover:bg-red-50" :aria-label="`删除任务：${task.title}`" @dragstart.prevent.stop @click="$emit('delete', task.id)">删除</button>
     </div>
   </article>
 </template>

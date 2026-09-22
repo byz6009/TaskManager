@@ -1,6 +1,6 @@
 # TaskManager 数据与接口契约
 
-第 0 轮计划已确认。完整采用本机《软件工程作业-Agent完整教程.md》第 19 节建议契约，无简化差异。第 2 轮实现 validateTaskInput 与 useTasks；第 3 轮实现 parseTaskData、encodeTaskData 和任务持久化，moveTask 留待第 4 轮。项目名称为 TaskManager，名称调整不改变字段、枚举、Result 或存储键。
+第 0 轮计划已确认。完整采用本机《软件工程作业-Agent完整教程.md》第 19 节建议契约，无简化差异。第 2 轮实现 validateTaskInput 与 useTasks；第 3 轮实现 parseTaskData、encodeTaskData 和任务持久化；第 4 轮实现 moveTask 与三列看板。项目名称为 TaskManager，名称调整不改变字段、枚举、Result 或存储键。
 
 ## Task 数据
 
@@ -47,6 +47,10 @@ useTasks 管理唯一的响应式任务集合，列表与看板由它派生。
 | delete | payload 为任务 id |
 
 浏览器 drop 只识别任务 id 和目标列，moveTask 负责状态转换，存储接入负责保存。
+
+第 4 轮接入：TaskBoard 替换原列表展示，直接从只读 tasks 派生三列及计数，不存第二份任务集合。原生 dragstart 通过 application/x-taskmanager-task-id 携带 id；dragover 对当前看板任务允许放置，drop 发出 move({ id, status })。App 调用 useTasks.changeTaskStatus，后者调用 moveTask 并将成功结果送入既有同步保存路径。无效输入不更新；同列放下返回原数组，不触发保存。
+
+看板保留 edit/delete 的 id 事件及表单状态选择器。拖拽结束、放下、Esc 或窗口失焦时清除临时高亮；空列始终保留放置区域。正在编辑的任务被拖动时仅同步草稿状态，保留未保存的标题、描述、优先级；取消编辑丢弃草稿，不撤销已完成的拖拽。
 
 ## 存储接入约定
 
