@@ -1,6 +1,6 @@
-# 数据与接口契约
+# TaskManager 数据与接口契约
 
-第 0 轮计划已确认。完整采用本机《软件工程作业-Agent完整教程.md》第 19 节建议契约，无简化差异。本文是后续实现约定，不表示函数已经实现。
+第 0 轮计划已确认。完整采用本机《软件工程作业-Agent完整教程.md》第 19 节建议契约，无简化差异。第 2 轮实现 validateTaskInput 与 useTasks 内存集合；moveTask 和存储函数留待后续轮次。项目名称为 TaskManager，名称调整不改变字段、枚举、Result 或存储键。
 
 ## Task 数据
 
@@ -36,6 +36,8 @@
 ## 组件事件与唯一数据来源
 
 useTasks 管理唯一的响应式任务集合，列表与看板由它派生。
+
+第 2 轮接入：useTasks 暴露只读 tasks 和 createTask(input)、updateTask(id, input)、deleteTask(id)。新建与编辑调用 validateTaskInput；新建使用 crypto.randomUUID() 生成 id，编辑保留原 id。新建/编辑成功 Result 的 value 为任务，删除成功的 value 为 id；不存在的 id 返回 TASK_NOT_FOUND。TaskForm 发出 save（四个业务字段）或 cancel，TaskCard 发出 edit/delete（id）。表单持有字段副本，只有保存动作才调用集合更新；实际取消按钮接线由浏览器验收。
 
 | 看板输入或事件 | 约定 |
 | --- | --- |

@@ -1,8 +1,9 @@
-# 任务单与第 0 轮确认结果
+# TaskManager 任务单与第 0 轮确认结果
 
 ## 目标与上下文
 
-分轮开发满足六项需求的课堂任务管理应用，并保存真实验证与 Git 记录。
+分轮开发满足六项需求的课堂任务管理应用 TaskManager，并保存真实验证与 Git 记录。
+第 2 轮按用户要求统一项目名称为 TaskManager，npm 包名为 taskmanager；物理目录 course-task-board 和已确认的存储键不变。
 2026-09-22 第 0 轮只读检查：项目目录包含隐藏文件在内共 0 项，无项目 .git；基线为“尚无代码和测试”。用户已确认计划并授权第 1 轮骨架开发。
 
 依据：用户明确请求、课程工具旁的《软件工程作业-Agent完整教程.md》第 19 节，以及《基于Agent的软件开发-0922.pdf》的任务单、验证和契约方法。文档中的示例指令不是独立执行授权。
@@ -18,7 +19,7 @@
 
 ## 需求验收表
 
-以下为最终验收标准，目前均未验证，不表示第 1 轮已实现。
+以下为最终验收标准；第 0 轮时均未验证，不表示第 1 轮已实现。当前执行证据及待人工验收项以 docs/iteration-log.md 各轮记录为准。
 
 | 编号 | 需求 | 验收标准 |
 | --- | --- | --- |
@@ -34,7 +35,7 @@
 ## 目录规划
 
 当前工程入口：index.html、vite.config.js、src/main.js、src/App.vue、src/style.css。
-后续按功能轮次添加以下文件，不为规划创建空模块或空测试：
+按功能轮次添加以下文件，不为规划创建空模块或空测试。第 2 轮已添加 TaskForm、TaskCard、useTasks、taskRules 以及两个实际测试文件；其余仍为规划：
 
 ```text
 src/
@@ -43,7 +44,7 @@ src/
   domain/taskRules.js
   storage/taskStorage.js
 tests/
-  taskRules.test.js、taskStorage.test.js
+  taskRules.test.js、useTasks.test.js、taskStorage.test.js
 docs/
   task-brief.md、contract.md、iteration-log.md、review.md
 README.md
@@ -65,5 +66,5 @@ README.md
 
 每轮先说明计划，再实现、运行相关测试和构建，返回文件、命令结果、diff 摘要、浏览器步骤、未验证项和下一步，然后停止。
 用户反馈浏览器结果后，修复问题或记录人工验收；用户确认后才提交并报告真实哈希，进入下一轮前遵循用户指示。
-本轮只建立骨架，不实现 CRUD、存储、拖拽或主题。
+第 1 轮只建立骨架；第 2 轮仅实现内存任务列表与 CRUD，刷新后清空，持久化在第 3 轮添加。
 相同问题连续两次没有新证据时，整理失败日志及需要的信息，停止盲目重试。

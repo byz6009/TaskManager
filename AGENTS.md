@@ -1,8 +1,9 @@
-# 项目约定
+# TaskManager 项目约定
 
 ## 范围与技术栈
 
-- 这是软件工程课堂的纯前端任务管理应用，项目根目录为 course-task-board。
+- 项目名称为 TaskManager，npm 包名为 taskmanager。这是软件工程课堂的纯前端任务管理应用，当前物理根目录仍为 course-task-board。
+- 项目名称调整不改变已确认的 localStorage 键；保留课程文档中的历史记录和真实路径。
 - 使用 JavaScript ES modules、Vue 3.5.43、Vite 8.3.0、@vitejs/plugin-vue 6.0.9、Tailwind CSS 4.3.3、@tailwindcss/vite 4.3.3；依赖必须使用精确版本。
 - 使用 Vue 自带响应式状态、桌面原生拖拽、localStorage 和 Node 内置测试，不新增后端，不发布，不推送远端。
 - 业务纯函数与 Vue、DOM、浏览器存储读写分离；数据和接口遵循 docs/contract.md。
