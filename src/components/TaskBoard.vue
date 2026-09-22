@@ -78,23 +78,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="overflow-x-auto pb-3">
+  <div class="overflow-x-auto rounded-2xl pb-3" tabindex="0" role="region" aria-label="三列任务看板，可横向滚动">
     <div class="grid min-w-[750px] grid-cols-3 items-start gap-4">
       <section
         v-for="column in columns"
         :key="column.value"
         :aria-labelledby="`column-${column.value}`"
-        class="min-h-80 rounded-2xl border-2 p-3 transition-colors"
-        :class="activeStatus === column.value ? 'border-teal-600 bg-teal-50' : 'border-slate-200 bg-slate-100/70'"
+        class="min-h-80 min-w-0 rounded-2xl border-2 p-3 transition-colors"
+        :class="activeStatus === column.value ? 'border-teal-600 bg-teal-50 dark:border-teal-400 dark:bg-teal-950' : 'border-slate-200 bg-slate-100/70 dark:border-slate-700 dark:bg-slate-800/50'"
         @dragover="dragOver($event, column.value)"
         @dragleave="dragLeave($event, column.value)"
         @drop="dropTask($event, column.value)"
       >
         <header class="flex items-center justify-between gap-2 px-1">
           <h3 :id="`column-${column.value}`" class="font-semibold">{{ column.label }}</h3>
-          <span class="rounded-full bg-white px-2.5 py-1 text-xs text-slate-600" :aria-label="`${column.label}：${column.tasks.length} 项任务`">{{ column.tasks.length }}</span>
+          <span class="rounded-full bg-white px-2.5 py-1 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-200" :aria-label="`${column.label}：${column.tasks.length} 项任务`">{{ column.tasks.length }}</span>
         </header>
-        <p class="my-3 min-h-5 text-center text-xs text-teal-800">
+        <p class="my-3 min-h-5 text-center text-xs text-teal-800 dark:text-teal-300">
           <template v-if="activeStatus === column.value">{{ draggingTask?.status === column.value ? '松开保持当前状态' : `松开移至「${column.label}」` }}</template>
           <template v-else-if="draggingId">将卡片拖到此列</template>
         </p>
@@ -111,7 +111,7 @@ onUnmounted(() => {
             <TaskCard :task="task" @edit="emit('edit', $event)" @delete="emit('delete', $event)" />
           </li>
         </ul>
-        <p v-else class="rounded-xl border border-dashed border-slate-300 px-3 py-12 text-center text-sm leading-6 text-slate-500">暂无{{ column.label }}任务<br />可将任务拖到这里</p>
+        <p v-else class="rounded-xl border border-dashed border-slate-300 px-3 py-12 text-center text-sm leading-6 text-slate-500 dark:border-slate-600 dark:text-slate-400">暂无{{ column.label }}任务<br />可将任务拖到这里</p>
       </section>
     </div>
   </div>

@@ -27,16 +27,16 @@ watch(() => props.task?.status, (status) => {
 </script>
 
 <template>
-  <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" aria-labelledby="form-heading">
+  <section class="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-700 dark:bg-slate-900" aria-labelledby="form-heading">
     <h2 id="form-heading" class="text-xl font-semibold">{{ task ? '编辑任务' : '新建任务' }}</h2>
-    <p class="mt-2 text-sm text-slate-500">{{ task ? '保存后更新原任务，取消则保留原内容。' : '写下下一步要完成的事。' }}</p>
+    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ task ? '保存后更新原任务，取消则保留原内容。' : '写下下一步要完成的事。' }}</p>
     <form class="mt-6 space-y-5" novalidate @submit.prevent="emit('save', { ...draft })">
       <div>
-        <label for="task-title" class="mb-2 block text-sm font-medium">标题 <span class="text-red-700">*</span></label>
+        <label for="task-title" class="mb-2 block text-sm font-medium">标题 <span class="text-red-700 dark:text-red-300">*</span></label>
         <input id="task-title" v-model="draft.title" class="field" required aria-required="true" :aria-describedby="error ? 'form-error' : undefined" placeholder="例如：整理课程需求" />
       </div>
       <div>
-        <label for="task-description" class="mb-2 block text-sm font-medium">描述 <span class="font-normal text-slate-500">（选填）</span></label>
+        <label for="task-description" class="mb-2 block text-sm font-medium">描述 <span class="font-normal text-slate-500 dark:text-slate-400">（选填）</span></label>
         <textarea id="task-description" v-model="draft.description" class="field resize-y" rows="4" placeholder="补充任务的具体内容" />
       </div>
       <div class="grid grid-cols-2 gap-4">
@@ -53,10 +53,10 @@ watch(() => props.task?.status, (status) => {
           </select>
         </div>
       </div>
-      <p v-if="error" id="form-error" role="alert" class="rounded-lg bg-red-50 p-3 text-sm text-red-800">{{ error }}</p>
+      <p v-if="error" id="form-error" role="alert" class="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{{ error }}</p>
       <div class="flex flex-wrap gap-3">
-        <button type="submit" class="rounded-lg bg-teal-700 px-5 py-2.5 font-medium text-white hover:bg-teal-800">{{ task ? '保存修改' : '创建任务' }}</button>
-        <button type="button" class="rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 hover:bg-slate-50" @click="emit('cancel')">{{ task ? '取消编辑' : '清空表单' }}</button>
+        <button type="submit" class="rounded-lg bg-teal-700 px-5 py-2.5 font-medium text-white hover:bg-teal-800 dark:bg-teal-400 dark:text-slate-950 dark:hover:bg-teal-300">{{ task ? '保存修改' : '创建任务' }}</button>
+        <button type="button" class="rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @click="emit('cancel')">{{ task ? '取消编辑' : '清空表单' }}</button>
       </div>
     </form>
   </section>

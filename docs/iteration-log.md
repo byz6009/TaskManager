@@ -265,3 +265,72 @@
 8. 检查高/中/低颜色标签和 Console；拖拽结束后无残留高亮，页面无应用错误。
 
 下一步：等待用户反馈；有问题先复现和最小修复，用户确认后再记录人工验收并提交 feat: add draggable kanban board。
+
+## 第 5 轮：深浅主题记忆与界面收尾（2026-09-22）
+
+### 基线、目标和范围
+
+- 开始时读取 AGENTS.md 与当前界面、契约、文档；工作区干净，已有第 4 轮提交 9f7daf6（feat: 添加三列看板与拖拽状态切换），前一条为 fca9b19。这些提交不是本轮创建，不推断用户人工验收结果。
+- 提供一键切换，使用 course-task-board.theme.v1 保存 light/dark，优先恢复合法选择，默认浅色。Tailwind 4 class 驱动 dark 变体，切换 html 根元素 dark 类。
+- 补齐现有界面的深色样式，保持红/黄/绿优先级语义和文字；改善窄窗口、长标题与焦点显示。当前应用没有弹窗，因此弹窗验收不适用，不额外新增弹窗。
+
+### 实际文件与 diff 摘要
+
+新增 1 个文件：src/composables/useTheme.js，负责主题恢复、根元素类更新、选择保存和异常提示。主题状态独立，不改变任务业务逻辑。
+
+修改 8 个文件：
+
+- src/App.vue：接入主题切换按钮与错误提示，补充页面深色颜色，页头可换行。
+- src/style.css：Tailwind 4 自定义 dark 变体、根元素 color-scheme、表单控件与焦点样式。
+- src/components/TaskForm.vue：表单、标签、错误提示和按钮的深色样式与窄窗口宽度约束。
+- src/components/TaskCard.vue：卡片、状态、优先级、操作按钮的深色样式；保留长标题自动折行。
+- src/components/TaskBoard.vue：列背景、计数、拖拽提示和空列的深色样式；滚动区域可通过键盘聚焦，保留横向滚动。
+- docs/contract.md、docs/task-brief.md、docs/iteration-log.md：主题接入说明、进度和真实验证记录。
+
+### 实际命令与结果
+
+Node/npm 命令块均先执行：
+
+```powershell
+. 'C:\Users\Administrator\Documents\Codex\2026-09-22\agent-x20\outputs\environment\Enter-CourseEnv.ps1'
+```
+
+1. Get-Content 读取 AGENTS.md、main.js、style.css、App、TaskForm、TaskCard、TaskBoard、contract、task-brief、iteration-log；rg --files -g AGENTS.md -g '!node_modules' -g '!dist' 只发现根目录规则。
+2. Git 使用单命令前缀 git -c safe.directory=C:/Users/Administrator/Documents/Codex/course-task-board；status --short --untracked-files=all 无输出，log -2 --oneline 返回上述提交。未修改全局 Git 配置。
+3. 使用 apply_patch 完成主题逻辑和样式修改。
+4. npm.cmd test：36 项通过，0 失败、0 取消、0 跳过，退出码 0。未修改既有测试预期。
+5. npm.cmd run build：成功，退出码 0；Vite 8.3.0 转换 18 个模块，115ms；HTML 0.41 kB、CSS 21.35 kB、JS 80.92 kB。
+6. git diff --stat 及 git diff -- src/style.css src/App.vue src/components/TaskBoard.vue src/components/TaskCard.vue src/components/TaskForm.vue（单命令 core.autocrlf=false）：核对主题和布局改动。
+7. git diff --exit-code -- src/domain/taskRules.js src/composables/useTasks.js src/storage/taskStorage.js tests package.json package-lock.json：无输出、退出码 0，确认任务规则、存储逻辑、已有测试和依赖没有改动。
+8. 最终 git diff --check 和新增文件逐项 git diff --no-index --check -- /dev/null <文件>（单命令 safe.directory 与 core.autocrlf=false）：无空白诊断，退出码 0。status --short --untracked-files=all 和 diff --stat 确认 8 个修改文件、1 个新增文件；diff --cached --stat 为空，未暂存。
+
+### Agent 浏览器预览：实际执行
+
+通过 cua_repl 在后台新建 Codex 内置浏览器标签，访问 http://localhost:5173，读取本地开发和 viewport 文档。以下是 Agent 的预览检查，不标为用户人工验收：
+
+- 初始显示浅色与空看板；点击深色按钮、reload，按钮仍为启用状态，截图显示深色背景、表单与空列。
+- 经页面表单创建 3 个“主题验收”临时任务，覆盖高/中/低和三种状态；高优先级任务标题为“主题验收-”加 5 次连续 LongTitleWithoutSpaces。截图检查深色卡片、红/黄/绿中文标签、长标题折行及按钮，未见标题撑宽卡片。
+- 切回浅色、reload，按钮恢复未启用状态，截图显示浅色并保留测试任务；核对同样的优先级和长标题。
+- viewport.set({ width: 360, height: 800 }) 后观察表单和页头。聚焦看板并按 ArrowRight，DOM 只读测量：页面 scrollWidth 与 clientWidth 均 345px（360px 视口扣除滚动条），看板可见宽 313px、内容宽 750px，scrollLeft 大于 0；页面无整体横向溢出，看板内部可滚动。
+- 窄窗口切深色、空标题提交，截图确认错误提示和按钮可读；任务数保持 3。恢复 viewport 默认值；打开中优先级任务编辑、填写描述草稿后取消，卡片仍为“暂无描述”。
+- 经页面删除本次创建的 3 个临时任务，恢复空看板；切回浅色并 reload，仍为空且保持浅色。未操作用户其他浏览器标签，未使用 localStorage.clear()。
+- themePage.dev.logs({ levels: ['error', 'warn'], limit: 20 }) 返回 []，本次捕获的错误/警告为 0。
+- 临时 viewport 已 reset，临时预览标签已关闭。截图仅用于本次工具内观察，未另存截图文件。
+
+### 尚未验证与限制
+
+- 用户日常浏览器中的双向切换/刷新、深浅主题下完整 CRUD 与真实拖拽回归，仍待用户验收。
+- 本轮没有实际模拟浏览器禁用存储或容量不足；主题异常分支已实现，但浏览器异常提示尚未执行验证。未把原有任务测试算作主题测试。
+- 当前无应用弹窗；原生下拉选择器使用 color-scheme 随主题变化，不另加弹窗功能。
+- lint/typecheck 未配置。未新增依赖、未发布、未推送；本轮未暂存或提交。
+
+### 用户浏览器验收步骤
+
+1. 在同一浏览器打开 http://localhost:5173。处于浅色时点击“切换深色”，按 F5；预期仍深色，按钮显示“切换浅色”。
+2. 点击“切换浅色”，再 F5；预期仍浅色，按钮显示“切换深色”。可在 Local Storage 核对 course-task-board.theme.v1 对应 dark/light。
+3. 两种主题分别查看背景、文字、卡片、表单、下拉框、操作按钮、空标题错误提示及高红/中黄/低绿标签。
+4. 切换主题后尝试新建、编辑保存、取消、删除和跨列拖拽，再刷新；任务内容和状态仍正确。主题切换不应清空编辑中的草稿。
+5. 用长中文或连续英文标题查看卡片；缩窄窗口至约 360px，表单按钮可操作，看板可横向滚动。使用已有空列查看提示，不必删除自己的任务。
+6. 检查 Console，确认无应用错误。当前没有弹窗，无须额外寻找弹窗入口。
+
+下一步：等待用户反馈；确认通过后记录用户人工验收并提交 feat: add persistent dark mode。

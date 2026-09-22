@@ -4,7 +4,9 @@ import TaskForm from './components/TaskForm.vue'
 import TaskBoard from './components/TaskBoard.vue'
 import { STATUS_OPTIONS } from './domain/taskRules.js'
 import { useTasks } from './composables/useTasks.js'
+import { useTheme } from './composables/useTheme.js'
 
+const { theme, themeError, toggleTheme } = useTheme(() => window.localStorage, document.documentElement)
 const { tasks, storageError, createTask, updateTask, deleteTask, changeTaskStatus } = useTasks(() => window.localStorage)
 const editingId = ref(null)
 const editingTask = computed(() => tasks.value.find(task => task.id === editingId.value) ?? null)
@@ -70,25 +72,33 @@ function moveTaskOnBoard({ id, status }) {
 </script>
 
 <template>
-  <main class="min-h-screen bg-slate-50 px-4 py-10 text-slate-900 sm:px-8">
+  <main class="min-h-screen bg-slate-50 px-4 py-10 text-slate-900 sm:px-8 dark:bg-slate-950 dark:text-slate-100">
     <div class="mx-auto max-w-7xl">
-      <header class="mb-8 border-b border-slate-200 pb-6">
-        <p class="text-sm font-semibold tracking-widest text-teal-700">任务管理</p>
-        <h1 class="mt-2 text-4xl font-bold tracking-tight">TaskManager</h1>
-        <p class="mt-3 text-slate-600">把要做的事整理清楚，让每一步都有方向。</p>
-        <p class="mt-3 text-sm text-slate-500">任务自动保存在当前浏览器，刷新后可继续查看。</p>
+      <header class="mb-8 border-b border-slate-200 pb-6 dark:border-slate-700">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold tracking-widest text-teal-700 dark:text-teal-300">任务管理</p>
+            <h1 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">TaskManager</h1>
+          </div>
+          <button type="button" :aria-pressed="theme === 'dark'" aria-label="深色模式" class="shrink-0 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700" @click="toggleTheme">
+            {{ theme === 'dark' ? '切换浅色' : '切换深色' }}
+          </button>
+        </div>
+        <p class="mt-3 text-slate-600 dark:text-slate-300">把要做的事整理清楚，让每一步都有方向。</p>
+        <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">任务自动保存在当前浏览器，刷新后可继续查看。</p>
       </header>
-      <p v-if="storageError" role="alert" class="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{{ storageError }}</p>
+      <p v-if="themeError" role="alert" class="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">{{ themeError }}</p>
+      <p v-if="storageError" role="alert" class="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">{{ storageError }}</p>
       <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
         <TaskForm :key="formVersion" :task="editingTask" :error="error" @save="saveTask" @cancel="cancelEdit" />
         <section class="min-w-0" aria-labelledby="list-heading">
           <div class="flex items-center justify-between gap-3">
             <h2 id="list-heading" class="text-xl font-semibold">任务看板</h2>
-            <span class="rounded-full bg-slate-200 px-3 py-1 text-sm text-slate-700">{{ tasks.length }} 项任务</span>
+            <span class="shrink-0 rounded-full bg-slate-200 px-3 py-1 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200">{{ tasks.length }} 项任务</span>
           </div>
-          <p class="mt-2 text-sm text-slate-500">拖动卡片切换状态，也可以通过编辑表单修改。</p>
-          <p role="status" class="my-3 min-h-6 text-sm text-teal-800">{{ notice }}</p>
-          <p v-if="tasks.length === 0" class="mb-4 text-sm text-slate-500">还没有任务，填写新建任务表单开始记录。</p>
+          <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">拖动卡片切换状态，也可以通过编辑表单修改。窄窗口可横向滚动看板。</p>
+          <p role="status" class="my-3 min-h-6 text-sm text-teal-800 dark:text-teal-300">{{ notice }}</p>
+          <p v-if="tasks.length === 0" class="mb-4 text-sm text-slate-500 dark:text-slate-400">还没有任务，填写新建任务表单开始记录。</p>
           <TaskBoard :tasks="tasks" @move="moveTaskOnBoard" @edit="editTask" @delete="removeTask" />
         </section>
       </div>
